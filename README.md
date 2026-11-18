@@ -7,12 +7,14 @@ When Focus mode is on, it hides:
 - Comments on video pages
 - Related videos beside the player
 - Recommendations on the YouTube home page
-- The notification bell's unread badge; the bell stays visible but is inactive
+- The Shorts player/feed
+- Shorts shelves and individual Shorts in search results
+- The notification bell while preserving its space in the top bar
 
 The setting changes immediately without reloading and is remembered between
 visits. Search results, subscriptions, channels, and playlists remain available.
-The current pill button and an OFF/ON switch are shown side by side so their
-designs can be compared; either control changes the same Focus setting.
+The switch is available throughout YouTube wherever its standard top bar is
+present.
 
 ## Development
 

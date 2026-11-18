@@ -12,11 +12,6 @@ const TOP_BAR_TARGETS = [
   'ytd-masthead #end',
   'yt-masthead #end',
 ];
-const NOTIFICATION_BUTTON_SELECTOR = [
-  'ytd-notification-topbar-button-renderer',
-  'yt-notification-topbar-button-renderer',
-  'yt-notification-topbar-button-view-model',
-].join(', ');
 
 export default defineContentScript({
   matches: ['https://www.youtube.com/*'],
@@ -30,6 +25,7 @@ export default defineContentScript({
       document.documentElement.classList.toggle(FOCUS_CLASS, enabled);
 
       updateControls(document.getElementById(BUTTON_CONTAINER_ID), enabled);
+      if (enabled) pauseShortsPlayback();
     };
 
     const toggleFocus = async () => {
@@ -48,6 +44,8 @@ export default defineContentScript({
     };
 
     const ensureButton = () => {
+      if (focusEnabled) pauseShortsPlayback();
+
       const existingContainer = document.getElementById(BUTTON_CONTAINER_ID);
       if (existingContainer?.isConnected) {
         updateControls(existingContainer, focusEnabled);
@@ -60,11 +58,10 @@ export default defineContentScript({
       const container = createButtonContainer(focusEnabled, () => {
         void toggleFocus();
       });
-      const notificationButton = target.querySelector(
-        NOTIFICATION_BUTTON_SELECTOR,
-      );
 
-      target.insertBefore(container, notificationButton ?? target.firstChild);
+      // YouTube puts Create first in this group, so prepending places the
+      // Focus control immediately to its left.
+      target.insertBefore(container, target.firstChild);
     };
 
     const saved = await browser.storage.local.get(STORAGE_KEY);
@@ -91,27 +88,14 @@ export default defineContentScript({
     ctx.addEventListener(document, 'yt-navigate-finish', scheduleButtonCheck);
     ctx.addEventListener(
       document,
-      'click',
+      'play',
       (event) => {
-        if (focusEnabled && isNotificationTarget(event.target)) {
-          blockEvent(event);
-        }
-      },
-      true,
-    );
-    ctx.addEventListener(
-      document,
-      'keydown',
-      (event) => {
-        const keyEvent = event as KeyboardEvent;
-        const isActivationKey =
-          keyEvent.key === 'Enter' || keyEvent.key === ' ';
         if (
           focusEnabled &&
-          isActivationKey &&
-          isNotificationTarget(event.target)
+          location.pathname.startsWith('/shorts') &&
+          event.target instanceof HTMLMediaElement
         ) {
-          blockEvent(event);
+          event.target.pause();
         }
       },
       true,
@@ -149,32 +133,19 @@ function createButtonContainer(
   const container = document.createElement('div');
   container.id = BUTTON_CONTAINER_ID;
 
-  const actionButton = document.createElement('button');
-  actionButton.className = 'focus-action-button';
-  actionButton.type = 'button';
-  actionButton.innerHTML = `
-    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-      <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-    <span class="focus-button-label">Focus</span>
-  `;
-  actionButton.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onToggle();
-  });
+  const modeLabel = document.createElement('span');
+  modeLabel.className = 'focus-mode-label';
+  modeLabel.textContent = 'FOCUS MODE';
 
   const switchButton = document.createElement('button');
   switchButton.className = 'focus-switch';
   switchButton.type = 'button';
   switchButton.setAttribute('role', 'switch');
   switchButton.innerHTML = `
-    <span class="focus-switch-label focus-switch-label-off">OFF</span>
     <span class="focus-switch-track" aria-hidden="true">
+      <span class="focus-switch-text">OFF</span>
       <span class="focus-switch-thumb"></span>
     </span>
-    <span class="focus-switch-label focus-switch-label-on">ON</span>
   `;
   switchButton.addEventListener('click', (event) => {
     event.preventDefault();
@@ -182,7 +153,7 @@ function createButtonContainer(
     onToggle();
   });
 
-  container.append(actionButton, switchButton);
+  container.append(modeLabel, switchButton);
   updateControls(container, enabled);
   return container;
 }
@@ -190,20 +161,10 @@ function createButtonContainer(
 function updateControls(container: Element | null, enabled: boolean): void {
   if (!container) return;
 
-  const actionButton =
-    container.querySelector<HTMLButtonElement>('.focus-action-button');
+  container.setAttribute('data-active', String(enabled));
+
   const switchButton =
     container.querySelector<HTMLButtonElement>('.focus-switch');
-
-  if (actionButton) {
-    actionButton.dataset.active = String(enabled);
-    actionButton.setAttribute('aria-pressed', String(enabled));
-    actionButton.setAttribute(
-      'aria-label',
-      enabled ? 'Turn Focus mode off' : 'Turn Focus mode on',
-    );
-    actionButton.title = enabled ? 'Focus mode is on' : 'Focus mode is off';
-  }
 
   if (switchButton) {
     switchButton.dataset.active = String(enabled);
@@ -215,18 +176,15 @@ function updateControls(container: Element | null, enabled: boolean): void {
     switchButton.title = enabled
       ? 'Focus mode is on — switch off'
       : 'Focus mode is off — switch on';
+    const switchText = switchButton.querySelector('.focus-switch-text');
+    if (switchText) switchText.textContent = enabled ? 'ON' : 'OFF';
   }
 }
 
-function isNotificationTarget(target: EventTarget | null): boolean {
-  return (
-    target instanceof Element &&
-    target.closest(NOTIFICATION_BUTTON_SELECTOR) != null
-  );
-}
+function pauseShortsPlayback(): void {
+  if (!location.pathname.startsWith('/shorts')) return;
 
-function blockEvent(event: Event): void {
-  event.preventDefault();
-  event.stopPropagation();
-  event.stopImmediatePropagation();
+  document
+    .querySelectorAll<HTMLMediaElement>('ytd-shorts video, ytd-shorts audio')
+    .forEach((media) => media.pause());
 }
