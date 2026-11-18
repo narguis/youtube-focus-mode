@@ -1,0 +1,22 @@
+{
+  "name": "focus-button-for-youtube",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A one-click focus mode for YouTube.",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "build:all": "npm run build && npm run build:firefox",
+    "check": "tsc --noEmit",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "zip:all": "npm run zip && npm run zip:firefox",
+    "postinstall": "wxt prepare"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wxt": "^0.21.5"
+  }
+}

@@ -1,0 +1,82 @@
+/* Hide only recommendation surfaces, not search, subscriptions, or playlists. */
+html.focus-button-enabled ytd-comments#comments,
+html.focus-button-enabled ytd-watch-flexy #comments,
+html.focus-button-enabled ytd-watch-flexy #related,
+html.focus-button-enabled ytd-watch-next-secondary-results-renderer,
+html.focus-button-enabled ytd-browse[page-subtype='home'] ytd-rich-grid-renderer,
+html.focus-button-enabled ytd-notification-topbar-button-renderer,
+html.focus-button-enabled yt-notification-topbar-button-renderer {
+  display: none !important;
+}
+
+#focus-button-container {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-right: 8px;
+}
+
+#focus-button-container button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 18px;
+  color: var(--yt-spec-text-primary, #0f0f0f);
+  background: var(--yt-spec-badge-chip-background, rgba(0, 0, 0, 0.05));
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 36px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+#focus-button-container button:hover {
+  background: var(--yt-spec-button-chip-background-hover, rgba(0, 0, 0, 0.1));
+}
+
+#focus-button-container button[data-active='true'] {
+  color: #fff;
+  background: #e53935;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+#focus-button-container button[data-active='true']:hover {
+  background: #c62828;
+}
+
+#focus-button-container button:focus-visible {
+  outline: 2px solid var(--yt-spec-call-to-action, #065fd4);
+  outline-offset: 2px;
+}
+
+#focus-button-container svg {
+  display: block;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 720px) {
+  #focus-button-container button {
+    width: 36px;
+    padding: 0;
+  }
+
+  #focus-button-container button span {
+    display: none;
+  }
+}
