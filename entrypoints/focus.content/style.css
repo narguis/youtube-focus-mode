@@ -3,20 +3,40 @@ html.focus-button-enabled ytd-comments#comments,
 html.focus-button-enabled ytd-watch-flexy #comments,
 html.focus-button-enabled ytd-watch-flexy #related,
 html.focus-button-enabled ytd-watch-next-secondary-results-renderer,
-html.focus-button-enabled ytd-browse[page-subtype='home'] ytd-rich-grid-renderer,
-html.focus-button-enabled ytd-notification-topbar-button-renderer,
-html.focus-button-enabled yt-notification-topbar-button-renderer {
+html.focus-button-enabled ytd-browse[page-subtype='home'] ytd-rich-grid-renderer {
+  display: none !important;
+}
+
+/* Keep the bell visible, but remove its attention-grabbing unread badge. */
+html.focus-button-enabled
+  ytd-notification-topbar-button-renderer
+  #notification-count,
+html.focus-button-enabled
+  ytd-notification-topbar-button-renderer
+  .yt-spec-icon-badge-shape__badge,
+html.focus-button-enabled
+  yt-notification-topbar-button-renderer
+  #notification-count,
+html.focus-button-enabled
+  yt-notification-topbar-button-renderer
+  .yt-spec-icon-badge-shape__badge,
+html.focus-button-enabled
+  yt-notification-topbar-button-view-model
+  .yt-spec-icon-badge-shape__badge {
   display: none !important;
 }
 
 #focus-button-container {
   display: flex;
   align-items: center;
+  gap: 8px;
   flex: 0 0 auto;
   margin-right: 8px;
+  color: var(--yt-spec-text-primary, #0f0f0f);
+  font-family: Roboto, Arial, sans-serif;
 }
 
-#focus-button-container button {
+#focus-button-container .focus-action-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -27,9 +47,10 @@ html.focus-button-enabled yt-notification-topbar-button-renderer {
   padding: 0 13px;
   border: 0;
   border-radius: 18px;
-  color: var(--yt-spec-text-primary, #0f0f0f);
-  background: var(--yt-spec-badge-chip-background, rgba(0, 0, 0, 0.05));
-  font-family: Roboto, Arial, sans-serif;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  font-family: inherit;
   font-size: 14px;
   font-weight: 500;
   line-height: 36px;
@@ -41,17 +62,18 @@ html.focus-button-enabled yt-notification-topbar-button-renderer {
     box-shadow 120ms ease;
 }
 
-#focus-button-container button:hover {
-  background: var(--yt-spec-button-chip-background-hover, rgba(0, 0, 0, 0.1));
+#focus-button-container .focus-action-button:hover {
+  background: rgba(0, 0, 0, 0.14);
+  background: color-mix(in srgb, currentColor 18%, transparent);
 }
 
-#focus-button-container button[data-active='true'] {
+#focus-button-container .focus-action-button[data-active='true'] {
   color: #fff;
   background: #e53935;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
 }
 
-#focus-button-container button[data-active='true']:hover {
+#focus-button-container .focus-action-button[data-active='true']:hover {
   background: #c62828;
 }
 
@@ -70,13 +92,117 @@ html.focus-button-enabled yt-notification-topbar-button-renderer {
   stroke-linejoin: round;
 }
 
+#focus-button-container .focus-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 18px;
+  color: inherit;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#focus-button-container .focus-switch:hover {
+  background: rgba(0, 0, 0, 0.06);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+#focus-button-container .focus-switch-label {
+  min-width: 23px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.45;
+  transition:
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+#focus-button-container
+  .focus-switch[data-active='false']
+  .focus-switch-label-off,
+#focus-button-container
+  .focus-switch[data-active='true']
+  .focus-switch-label-on {
+  opacity: 1;
+}
+
+#focus-button-container
+  .focus-switch[data-active='true']
+  .focus-switch-label-on {
+  color: #e53935;
+}
+
+#focus-button-container .focus-switch-track {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: #8a8a8a;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
+  transition: background-color 150ms ease;
+}
+
+#focus-button-container .focus-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 150ms ease;
+}
+
+#focus-button-container
+  .focus-switch[data-active='true']
+  .focus-switch-track {
+  background: #e53935;
+}
+
+#focus-button-container
+  .focus-switch[data-active='true']
+  .focus-switch-thumb {
+  transform: translateX(20px);
+}
+
+/* YouTube places this attribute on the root when its dark theme is active. */
+html[dark] #focus-button-container .focus-action-button {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+html[dark] #focus-button-container .focus-action-button:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+html[dark]
+  #focus-button-container
+  .focus-action-button[data-active='true'] {
+  background: #e53935;
+}
+
+html[dark]
+  #focus-button-container
+  .focus-action-button[data-active='true']:hover {
+  background: #c62828;
+}
+
 @media (max-width: 720px) {
-  #focus-button-container button {
+  #focus-button-container .focus-action-button {
     width: 36px;
     padding: 0;
   }
 
-  #focus-button-container button span {
+  #focus-button-container .focus-button-label {
     display: none;
   }
 }

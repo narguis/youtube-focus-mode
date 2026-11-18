@@ -7,10 +7,12 @@ When Focus mode is on, it hides:
 - Comments on video pages
 - Related videos beside the player
 - Recommendations on the YouTube home page
-- The notification bell and unread count
+- The notification bell's unread badge; the bell stays visible but is inactive
 
 The setting changes immediately without reloading and is remembered between
 visits. Search results, subscriptions, channels, and playlists remain available.
+The current pill button and an OFF/ON switch are shown side by side so their
+designs can be compared; either control changes the same Focus setting.
 
 ## Development
 
