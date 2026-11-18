@@ -19,6 +19,7 @@ export default defineContentScript({
 
   async main(ctx) {
     let focusEnabled = false;
+    let latestWrite = 0;
 
     const applyFocusState = (enabled: boolean) => {
       focusEnabled = enabled;
@@ -31,6 +32,7 @@ export default defineContentScript({
     const toggleFocus = async () => {
       const previousState = focusEnabled;
       const nextState = !previousState;
+      const write = ++latestWrite;
 
       // Apply first so the page responds immediately to the click.
       applyFocusState(nextState);
@@ -38,14 +40,14 @@ export default defineContentScript({
       try {
         await browser.storage.local.set({ [STORAGE_KEY]: nextState });
       } catch (error) {
-        applyFocusState(previousState);
+        // Do not let a stale failed write overwrite a newer click or a change
+        // received from another tab.
+        if (write === latestWrite) applyFocusState(previousState);
         console.error('Focus Button could not save its state.', error);
       }
     };
 
     const ensureButton = () => {
-      if (focusEnabled) pauseShortsPlayback();
-
       const existingContainer = document.getElementById(BUTTON_CONTAINER_ID);
       if (existingContainer?.isConnected) {
         updateControls(existingContainer, focusEnabled);
@@ -64,8 +66,14 @@ export default defineContentScript({
       target.insertBefore(container, target.firstChild);
     };
 
-    const saved = await browser.storage.local.get(STORAGE_KEY);
-    applyFocusState(saved[STORAGE_KEY] === true);
+    try {
+      const saved = await browser.storage.local.get(STORAGE_KEY);
+      applyFocusState(saved[STORAGE_KEY] === true);
+    } catch (error) {
+      // Storage failure should not prevent the control from being available.
+      applyFocusState(false);
+      console.error('Focus Button could not load its saved state.', error);
+    }
     ensureButton();
 
     let framePending = false;
@@ -79,13 +87,19 @@ export default defineContentScript({
       });
     };
 
-    const pageObserver = new MutationObserver(scheduleButtonCheck);
+    const pageObserver = new MutationObserver(() => {
+      const container = document.getElementById(BUTTON_CONTAINER_ID);
+      if (!container?.isConnected) scheduleButtonCheck();
+    });
     pageObserver.observe(document.documentElement, {
       childList: true,
       subtree: true,
     });
 
-    ctx.addEventListener(document, 'yt-navigate-finish', scheduleButtonCheck);
+    ctx.addEventListener(document, 'yt-navigate-finish', () => {
+      if (focusEnabled) pauseShortsPlayback();
+      scheduleButtonCheck();
+    });
     ctx.addEventListener(
       document,
       'play',
@@ -105,6 +119,7 @@ export default defineContentScript({
       typeof browser.storage.onChanged.addListener
     >[0] = (changes, areaName) => {
       if (areaName !== 'local' || changes[STORAGE_KEY] == null) return;
+      latestWrite += 1;
       applyFocusState(changes[STORAGE_KEY].newValue === true);
     };
 
@@ -141,12 +156,20 @@ function createButtonContainer(
   switchButton.className = 'focus-switch';
   switchButton.type = 'button';
   switchButton.setAttribute('role', 'switch');
-  switchButton.innerHTML = `
-    <span class="focus-switch-track" aria-hidden="true">
-      <span class="focus-switch-text">OFF</span>
-      <span class="focus-switch-thumb"></span>
-    </span>
-  `;
+
+  const switchTrack = document.createElement('span');
+  switchTrack.className = 'focus-switch-track';
+  switchTrack.setAttribute('aria-hidden', 'true');
+
+  const switchText = document.createElement('span');
+  switchText.className = 'focus-switch-text';
+  switchText.textContent = 'OFF';
+
+  const switchThumb = document.createElement('span');
+  switchThumb.className = 'focus-switch-thumb';
+
+  switchTrack.append(switchText, switchThumb);
+  switchButton.append(switchTrack);
   switchButton.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();

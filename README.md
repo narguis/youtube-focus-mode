@@ -1,5 +1,7 @@
 # Focus Button for YouTube
 
+![Focus Button for YouTube](public/icon-128.png)
+
 A small browser extension that adds a **Focus** toggle to YouTube's top bar.
 
 When Focus mode is on, it hides:
